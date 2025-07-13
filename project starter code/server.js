@@ -45,6 +45,10 @@ app.get("/filteredimage", async (req, res) => {
 app.get("/", async (req, res) => {
   res.send("try GET /filteredimage?image_url={{}}");
 });
+app.get("/health", (req, res) => {
+  res.status(200).send("Healthy");
+});
+
 
 // Start the Server
 app.listen(port, () => {
