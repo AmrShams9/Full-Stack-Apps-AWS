@@ -1,38 +1,45 @@
 import fs from "fs";
-import path from "path";
 import Jimp from "jimp";
+import axios from "axios";
 
-export async function filterImageFromURL(inputURL) {
+
+// filterImageFromURL
+// helper function to download, filter, and save the filtered image locally
+// returns the absolute path to the local image
+// INPUTS
+//    inputURL: string - a publicly accessible url to an image file
+// RETURNS
+//    an absolute path to a filtered image locally saved file
+ export async function filterImageFromURL(inputURL) {
   return new Promise(async (resolve, reject) => {
     try {
-      const photo = await Jimp.read(inputURL);
-
-      // create tmp folder if not exist
-      const tmpDir = path.join(process.cwd(), "tmp");
-      if (!fs.existsSync(tmpDir)) {
-        fs.mkdirSync(tmpDir);
-      }
-
-      const outpath = path.join(tmpDir, "filtered." + Math.floor(Math.random() * 2000) + ".jpg");
-
+      const photoBuffer = await axios.get(inputURL, {
+        responseType: "arraybuffer"
+      })
+      const photo = await Jimp.read(Buffer.from(photoBuffer?.data, "binary"));
+      const outpath =
+        "/tmp/filtered." + Math.floor(Math.random() * 2000) + ".jpg";
       await photo
         .resize(256, 256) // resize
         .quality(60) // set JPEG quality
         .greyscale() // set greyscale
-        .write(outpath, (err) => {
-          if (err) return reject(err);
+        .write(outpath, (img) => {
           resolve(outpath);
         });
     } catch (error) {
+      console.error('Error in filterImageFromURL:', error);
       reject(error);
     }
   });
 }
 
-export async function deleteLocalFiles(files) {
+// deleteLocalFiles
+// helper function to delete files on the local disk
+// useful to cleanup after tasks
+// INPUTS
+//    files: Array<string> an array of absolute paths to files
+ export async function deleteLocalFiles(files) {
   for (let file of files) {
-    if (fs.existsSync(file)) {
-      fs.unlinkSync(file);
-    }
+    fs.unlinkSync(file);
   }
 }
